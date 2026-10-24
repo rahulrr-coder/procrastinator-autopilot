@@ -48,6 +48,7 @@ export default async (req) => {
     }
     return new Response(null, { status: 405 });
   } catch (e) {
-    return Response.json({ error: e.message }, { status: 500 });
+    console.error(e); // details stay in Netlify logs; never echo database errors to the browser
+    return Response.json({ error: "Something went wrong. Try again." }, { status: 500 });
   }
 };

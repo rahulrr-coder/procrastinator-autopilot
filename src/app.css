@@ -97,10 +97,7 @@ textarea { resize:none; min-height:92px; }
 .steps li::before { content:counter(s); color:var(--muted); font-size:.85rem; padding-top:2px; }
 .steps li.first::before { color:var(--accent); font-weight:600; }
 .steps .t { color:var(--muted); font-size:.82rem; white-space:nowrap; padding-top:2px; }
-details { margin-top:32px; border-top:1px solid var(--line); }
-summary { cursor:pointer; padding:14px 0; font-weight:500; list-style:none; display:flex; justify-content:space-between; }
-summary::after { content:"+"; color:var(--muted); } details[open] summary::after { content:"\2212"; }
-summary::-webkit-details-marker { display:none; }
+.why { border-top:1px solid var(--line); padding-top:20px; }
 .principle { margin:0 0 12px; font-size:.9rem; color:var(--muted); } .principle b { color:var(--ink); font-weight:500; display:block; }
 .cta { position:sticky; bottom:0; margin:36px calc(-1 * clamp(20px,4vw,56px)) 0; padding:14px clamp(20px,4vw,56px) calc(14px + env(safe-area-inset-bottom)); background:linear-gradient(transparent, var(--bg) 28%); }
 

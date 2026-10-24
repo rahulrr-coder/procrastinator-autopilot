@@ -229,10 +229,10 @@
           <div class="sec"><p class="eyebrow">Your trigger</p><p>{current.plan.if_then}</p></div>
           <div class="sec"><p class="eyebrow">Afterwards</p><p>{current.plan.reward}</p></div>
 
-          <details>
-            <summary>Why this works</summary>
+          <div class="sec why">
+            <p class="eyebrow">Why this works</p>
             {#each current.plan.principles as p}<p class="principle"><b>{p.name}</b>{p.evidence}</p>{/each}
-          </details>
+          </div>
         </div>
 
         <div class="col side">
