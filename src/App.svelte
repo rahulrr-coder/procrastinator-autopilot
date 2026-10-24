@@ -2,12 +2,13 @@
   import { onMount } from "svelte";
   import { fly, fade } from "svelte/transition";
   import { quintOut } from "svelte/easing";
+  import Sloth from "./Sloth.svelte";
 
   const TYPE = { habit: "Habit", petty: "Quick task", deadline: "Deadline" };
   const RANK = { deadline: 0, habit: 1, petty: 2 };
   const EXCUSES = ["It feels too big", "It's boring", "I'm scared I'll do it badly", "No urgency", "I'm tired"];
-  const THINKING = ["Finding the smallest possible first step", "Lowering the bar, on purpose", "Checking the research so you don't have to"];
-  const COLORS = ["var(--accent)", "var(--ink)", "var(--muted)"];
+  const THINKING = ["Consulting the sloth council", "Finding the smallest possible first step", "Lowering the bar, on purpose", "Checking the research so you don't have to"];
+  const COLORS = ["var(--accent)", "var(--brown)", "var(--moss)"];
   const enter = { y: 12, duration: 220, easing: quintOut };
 
   const LS = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
@@ -120,7 +121,7 @@
 <main>
   {#if !focus}
     <div class="bar">
-      <button class="mark" onclick={() => (view = profile ? "home" : "welcome")} aria-label="Home">autopilot<i></i></button>
+      <button class="mark" onclick={() => (view = profile ? "home" : "welcome")} aria-label="Home"><Sloth size={34} />autopilot</button>
       {#if profile}
         <div class="who">
           {#if uid}<span class="sync" aria-live="polite">{sync === "saving" ? "Saving" : sync === "saved" ? "Saved" : ""}</span>{/if}
@@ -131,10 +132,13 @@
   {/if}
 
   {#if view === "welcome"}
-    <section in:fly={enter}>
-      <h1>{profile ? "Your details" : "Let's get acquainted."}</h1>
-      <p class="lede">Two details so plans fit you. Stored privately in your own profile. No password, no email.</p>
-      <form onsubmit={(e) => { e.preventDefault(); saveProfile(); }}>
+    <section class="cols" in:fly={enter}>
+      <div class="col">
+        <h1>{profile ? "Your details" : "Let's get acquainted."}</h1>
+        <p class="lede">Two details so plans fit you. Stored privately in your own profile. No password, no email.</p>
+        <Sloth hang size={150} />
+      </div>
+      <form class="col side" onsubmit={(e) => { e.preventDefault(); saveProfile(); }}>
         <div class="field">
           <label class="label" for="name">What should we call you?</label>
           <input id="name" bind:value={form.name} maxlength="40" autocomplete="given-name" placeholder="Alex" />
@@ -149,95 +153,107 @@
     </section>
 
   {:else if view === "home"}
-    <section in:fly={enter}>
-      <h1>What are you avoiding{profile?.name ? `, ${profile.name}` : ""}?</h1>
-      <p class="lede">Say it plainly. We'll make the first move small enough to do right now.</p>
+    <section class="cols" in:fly={enter}>
+      <div class="col">
+        <h1>What are you avoiding{profile?.name ? `, ${profile.name}` : ""}?</h1>
+        <p class="lede">Say it plainly. We'll make the first move small enough to do right now.</p>
 
-      {#if busy}
-        <div class="skel" role="status" aria-label="Making your plan"><i></i><i></i><i></i><i></i></div>
-        {#key msg}<p class="small" in:fade={{ duration: 200 }}>{THINKING[msg]}</p>{/key}
-      {:else}
-        <form onsubmit={(e) => { e.preventDefault(); make(); }}>
-          <div class="field">
-            <label class="label" for="task">The thing</label>
-            <textarea id="task" class="big-input" bind:value={task} placeholder="File my taxes. Go to the gym. Reply to that email." required maxlength="300"></textarea>
+        {#if busy}
+          <div class="thinking" role="status" aria-label="Making your plan">
+            <Sloth hang size={170} />
+            {#key msg}<p in:fade={{ duration: 200 }}>{THINKING[msg]}</p>{/key}
           </div>
-          {#if task.trim()}
-            <div class="field" in:fly={{ y: 8, duration: 200, easing: quintOut }}>
-              <span class="label">Why haven't you? <span class="small">Optional</span></span>
-              <div class="chips">
-                {#each EXCUSES as e}<button type="button" class="chip" class:on={excuse === e} onclick={() => (excuse = excuse === e ? "" : e)}>{e}</button>{/each}
-              </div>
+        {:else}
+          <form onsubmit={(e) => { e.preventDefault(); make(); }}>
+            <div class="field">
+              <label class="label" for="task">The thing</label>
+              <textarea id="task" class="big-input" bind:value={task} placeholder="File my taxes. Go to the gym. Reply to that email." required maxlength="300"></textarea>
             </div>
-          {/if}
-          <button class="btn" disabled={!task.trim()}>Make it easy</button>
-          {#if error}<p class="err" role="alert">{error}</p>{/if}
-        </form>
-      {/if}
+            {#if task.trim()}
+              <div class="field" in:fly={{ y: 8, duration: 200, easing: quintOut }}>
+                <span class="label">Why haven't you? <span class="small">Optional</span></span>
+                <div class="chips">
+                  {#each EXCUSES as e}<button type="button" class="chip" class:on={excuse === e} onclick={() => (excuse = excuse === e ? "" : e)}>{e}</button>{/each}
+                </div>
+              </div>
+            {/if}
+            <button class="btn" disabled={!task.trim()}>Make it easy</button>
+            {#if error}<p class="err" role="alert">{error}</p>{/if}
+          </form>
+        {/if}
+      </div>
 
-      {#if tasks.length}
-        <p class="summary">{open.length} open · {doneN} done{streak ? ` · ${streak} day streak` : ""}</p>
-      {/if}
+      <div class="col side">
+        {#if tasks.length}
+          <p class="summary">{open.length} open · {doneN} done{streak ? ` · ${streak} day streak` : ""}</p>
+        {/if}
 
-      {#if open.length && level !== "light"}
-        <div class="notice" in:fade>
-          <p>{level === "overloaded" ? `${open.length} open is more than anyone holds in their head. Finish one, or let one go.` : `${open.length} open. Pick one and ignore the rest until it's done.`}</p>
-          <button class="btn" onclick={() => show(open[0])}>Start with “{open[0].plan.title}”</button>
-        </div>
-      {/if}
+        {#if open.length && level !== "light"}
+          <div class="notice" in:fade>
+            <p>{level === "overloaded" ? `${open.length} open is more than anyone holds in their head. Finish one, or let one go.` : `${open.length} open. Pick one and ignore the rest until it's done.`}</p>
+            <button class="btn" onclick={() => show(open[0])}>Start with “{open[0].plan.title}”</button>
+          </div>
+        {/if}
 
-      {#if open.length}
-        <ul class="list">
-          {#each open as t, n (t.id)}
-            <li><button class="row" onclick={() => show(t)}>
-              <b>{#if n === 0 && level !== "light"}<span class="start">Start here</span>{/if}{t.plan.title}</b>
-              <span class="meta">{TYPE[t.plan.type]} · {t.i ? `Step ${t.i + 1} of ${steps(t).length}` : "Not started"}</span>
-              <span class="go">{t.i ? "Resume" : "Open"}</span>
-              {#if t.i}<span class="track"><i style="width:{pct(t)}%"></i></span>{/if}
-            </button></li>
-          {/each}
-        </ul>
-      {:else if !busy}
-        <p class="empty">{tasks.length ? "All clear. Take the win." : "Nothing here yet. Start with whatever you've been quietly dreading the longest."}</p>
-      {/if}
+        {#if open.length}
+          <ul class="list">
+            {#each open as t, n (t.id)}
+              <li><button class="row" onclick={() => show(t)}>
+                <b>{#if n === 0 && level !== "light"}<span class="start">Start here</span>{/if}{t.plan.title}</b>
+                <span class="meta">{TYPE[t.plan.type]} · {t.i ? `Step ${t.i + 1} of ${steps(t).length}` : "Not started"}</span>
+                <span class="go">{t.i ? "Resume" : "Open"}</span>
+                {#if t.i}<span class="track"><i style="width:{pct(t)}%"></i></span>{/if}
+              </button></li>
+            {/each}
+          </ul>
+        {:else}
+          <div class="empty">
+            <Sloth hang size={120} />
+            <p>{tasks.length ? "All clear. Take the win." : "Nothing here yet. Start with whatever you've been quietly dreading the longest."}</p>
+          </div>
+        {/if}
+      </div>
     </section>
 
   {:else if view === "plan"}
     <section class="plan" in:fly={enter}>
       <button class="quiet back" onclick={() => (view = "home")}>← Back</button>
-      <p class="eyebrow">{TYPE[current.plan.type]}</p>
-      <h2>{current.plan.title}</h2>
-      <p>{current.plan.diagnosis}</p>
-      {#if current.plan.priority_note}<div class="notice"><p class="eyebrow">Where this fits</p><p>{current.plan.priority_note}</p></div>{/if}
-      {#if current.plan.identity}<p class="quote">“{current.plan.identity}”</p>{/if}
+      <div class="cols">
+        <div class="col">
+          <p class="eyebrow">{TYPE[current.plan.type]}</p>
+          <h2>{current.plan.title}</h2>
+          <p>{current.plan.diagnosis}</p>
+          {#if current.plan.priority_note}<div class="notice"><p class="eyebrow">Where this fits</p><p>{current.plan.priority_note}</p></div>{/if}
+          {#if current.plan.identity}<p class="quote">“{current.plan.identity}”</p>{/if}
 
-      <div class="sec"><p class="eyebrow">Your trigger</p><p>{current.plan.if_then}</p></div>
+          <div class="sec"><p class="eyebrow">Your trigger</p><p>{current.plan.if_then}</p></div>
+          <div class="sec"><p class="eyebrow">Afterwards</p><p>{current.plan.reward}</p></div>
 
-      <div class="sec">
-        <p class="eyebrow">The plan</p>
-        <ol class="steps">
-          <li class="first"><span>{current.plan.first_move}</span><span class="t">5 sec</span></li>
-          {#each current.plan.steps as s}<li><span>{s.text}</span><span class="t">{mins(s.minutes)}</span></li>{/each}
-        </ol>
-      </div>
-
-      {#if current.plan.milestones.length}
-        <div class="sec"><p class="eyebrow">Milestones</p>
-          <ol class="steps">{#each current.plan.milestones as m}<li><span>{m.text}</span><span class="t">{m.when}</span></li>{/each}</ol>
+          <details>
+            <summary>Why this works</summary>
+            {#each current.plan.principles as p}<p class="principle"><b>{p.name}</b>{p.evidence}</p>{/each}
+          </details>
         </div>
-      {/if}
 
-      <div class="sec"><p class="eyebrow">Afterwards</p><p>{current.plan.reward}</p></div>
+        <div class="col side">
+          <p class="eyebrow">The plan</p>
+          <ol class="steps">
+            <li class="first"><span>{current.plan.first_move}</span><span class="t">5 sec</span></li>
+            {#each current.plan.steps as s}<li><span>{s.text}</span><span class="t">{mins(s.minutes)}</span></li>{/each}
+          </ol>
 
-      <details>
-        <summary>Why this works</summary>
-        {#each current.plan.principles as p}<p class="principle"><b>{p.name}</b>{p.evidence}</p>{/each}
-      </details>
+          {#if current.plan.milestones.length}
+            <div class="sec"><p class="eyebrow">Milestones</p>
+              <ol class="steps">{#each current.plan.milestones as m}<li><span>{m.text}</span><span class="t">{m.when}</span></li>{/each}</ol>
+            </div>
+          {/if}
 
-      <div class="cta">
-        <button class="btn" onclick={go}>{current.i ? "Pick up where I left off" : "Start, it takes 5 seconds"}</button>
-        <div class="center">
-          {#if sure}<button class="quiet danger" onclick={remove}>Yes, remove it</button>{:else}<button class="quiet" onclick={() => (sure = true)}>Remove task</button>{/if}
+          <div class="cta">
+            <button class="btn" onclick={go}>{current.i ? "Pick up where I left off" : "Start, it takes 5 seconds"}</button>
+            <div class="center">
+              {#if sure}<button class="quiet danger" onclick={remove}>Yes, remove it</button>{:else}<button class="quiet" onclick={() => (sure = true)}>Remove task</button>{/if}
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -272,6 +288,7 @@
       {#each confetti as c}<i style="left:{c.x}%; --dx:{c.dx}; --r:{c.r}; --c:{c.c}; animation-delay:{c.d}s"></i>{/each}
     </div>
     <section class="focus" in:fade={{ duration: 300 }}>
+      <div class="finish-sloth"><Sloth size={96} /></div>
       <p class="eyebrow">Finished</p>
       <h1>You did the thing.</h1>
       <p class="lede">{current.plan.title} is off your mind.{current.plan.reward ? ` Now: ${current.plan.reward}` : ""}</p>
